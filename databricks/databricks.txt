@@ -1,0 +1,43 @@
+    bronze_silver_gold_pipeline:
+      name: "[${bundle.target}] Orders & Logistics Pipeline"
+      
+      # 1. 💡 在 Job 级别，改用 environments 来定义你的 Serverless 环境
+      environments:
+        - environment_key: my_serverless_env
+          spec:
+            client: serverless
+
+      schedule:
+        quartz_cron_expression: "0 0 3 * * ?"
+        timezone_id: "UTC"
+        pause_status: PAUSED
+
+      tasks:
+        - task_key: bronze
+          # 2. 💡 关键修改：把原来的 compute_key 改为 environment_key
+          environment_key: my_serverless_env  
+          notebook_task:
+            notebook_path: ./notebooks/01_bronze_layer.py
+            base_parameters:
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+
+        - task_key: silver
+          environment_key: my_serverless_env  # 💡 同样改为 environment_key
+          depends_on:
+            - task_key: bronze
+          notebook_task:
+            notebook_path: ./notebooks/02_silver_layer.py
+            base_parameters:
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+
+        - task_key: gold
+          environment_key: my_serverless_env  # 💡 同样改为 environment_key
+          depends_on:
+            - task_key: silver
+          notebook_task:
+            notebook_path: ./notebooks/03_gold_layer.py
+            base_parameters:
+              catalog: ${var.catalog}
+              schema: ${var.schema}

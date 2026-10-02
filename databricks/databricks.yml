@@ -1,0 +1,82 @@
+# Databricks Asset Bundle configuration.
+# Deploy with:  databricks bundle deploy -t dev
+# Run with:     databricks bundle run -t dev bronze_silver_gold_pipeline
+#
+# Docs: https://docs.databricks.com/en/dev-tools/bundles/index.html
+
+bundle:
+  name: data-pipeline-demo
+
+variables:
+  catalog:
+    description: Unity Catalog catalog to use
+    default: main
+  schema:
+    description: Schema (database) to use
+    default: data_pipeline_demo
+
+resources:
+  jobs:
+    bronze_silver_gold_pipeline:
+      name: "[${bundle.target}] Orders & Logistics Pipeline"
+      compute:
+        - compute_key: my_serverless_env
+          spec:
+            kind: serverless
+
+      # Runs daily at 03:00 UTC -- adjust to match source system availability.
+      schedule:
+        quartz_cron_expression: "0 0 3 * * ?"
+        timezone_id: "UTC"
+        pause_status: PAUSED # unpause once validated in a real workspace
+
+      tasks:
+        - task_key: bronze
+          compute_key: my_serverless_env
+          notebook_task:
+            notebook_path: ./notebooks/01_bronze_layer.py
+            base_parameters:
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+          
+
+        - task_key: silver
+          compute_key: my_serverless_env
+          depends_on:
+            - task_key: bronze
+          notebook_task:
+            notebook_path: ./notebooks/02_silver_layer.py
+            base_parameters:
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+          
+
+        - task_key: gold
+          compute_key: my_serverless_env
+          depends_on:
+            - task_key: silver
+          notebook_task:
+            notebook_path: ./notebooks/03_gold_layer.py
+            base_parameters:
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+         
+
+      email_notifications:
+        on_failure:
+          - echow621@gmail.com
+
+targets:
+  dev:
+    mode: development
+    default: true
+    workspace:
+      host: https://dbc-c67e6da0-801a.cloud.databricks.com/browse/folders/2256396061922492?o=7474644994237871
+      
+
+  prod:
+    mode: production
+    workspace:
+      host: https://<your-workspace>.cloud.databricks.com
+    variables:
+      schema: data_pipeline_prod
