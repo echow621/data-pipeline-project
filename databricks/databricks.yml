@@ -19,10 +19,11 @@ resources:
   jobs:
     bronze_silver_gold_pipeline:
       name: "[${bundle.target}] Orders & Logistics Pipeline"
-      compute:
-        - compute_key: my_serverless_env
+      environments:
+        - environment_key: my_serverless_env
           spec:
-            kind: serverless
+            client: serverless
+
 
       # Runs daily at 03:00 UTC -- adjust to match source system availability.
       schedule:
@@ -32,7 +33,7 @@ resources:
 
       tasks:
         - task_key: bronze
-          compute_key: my_serverless_env
+          environment_key: my_serverless_env
           notebook_task:
             notebook_path: ./notebooks/01_bronze_layer.py
             base_parameters:
@@ -41,7 +42,7 @@ resources:
           
 
         - task_key: silver
-          compute_key: my_serverless_env
+          environment_key: my_serverless_env
           depends_on:
             - task_key: bronze
           notebook_task:
@@ -52,7 +53,7 @@ resources:
           
 
         - task_key: gold
-          compute_key: my_serverless_env
+          environment_key: my_serverless_env
           depends_on:
             - task_key: silver
           notebook_task:
@@ -77,6 +78,7 @@ targets:
   prod:
     mode: production
     workspace:
-      host: https://<your-workspace>.cloud.databricks.com
+      host: https://dbc-c67e6da0-801a.cloud.databricks.com/browse/folders/2256396061922492?o=7474644994237871
+      root_path: /Workspace/Shared/.bundle/${bundle.name}/${bundle.target}
     variables:
       schema: data_pipeline_prod
