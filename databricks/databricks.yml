@@ -7,13 +7,13 @@
 bundle:
   name: data-pipeline-demo
 
-#variables:
-#  catalog:
-#    description: Unity Catalog catalog to use
-#   default: main
-# schema:
-#    description: Schema (database) to use
-#   default: data_pipeline_demo
+variables:
+  catalog:
+    description: Unity Catalog catalog to use
+    default: main
+  schema:
+    description: Schema (database) to use
+    default: data_pipeline_demo
 
 resources:
   schemas:
