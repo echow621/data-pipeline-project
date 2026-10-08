@@ -7,15 +7,20 @@
 bundle:
   name: data-pipeline-demo
 
-variables:
-  catalog:
-    description: Unity Catalog catalog to use
-    default: main
-  schema:
-    description: Schema (database) to use
-    default: data_pipeline_demo
+#variables:
+#  catalog:
+#    description: Unity Catalog catalog to use
+#   default: main
+# schema:
+#    description: Schema (database) to use
+#   default: data_pipeline_demo
 
 resources:
+  schemas:
+    pipeline_schema:
+      name: ${var.schema}
+      catalog_name: ${var.catalog}
+
   jobs:
     bronze_silver_gold_pipeline:
       name: "[${bundle.target}] Orders & Logistics Pipeline"
